@@ -25,7 +25,7 @@ class Keychain(object):
             return None
 
         if path and not os.path.exists(path):
-            raise IOError("Keychain %s does not exist" % path)
+            raise IOError(f"Keychain {path} does not exist")
 
         keychain     = ctypes.c_void_p()
         keychain_ptr = ctypes.pointer(keychain)
@@ -61,11 +61,14 @@ class Keychain(object):
         )
 
         if rc == -25300:
-            raise KeyError('No keychain entry for generic password: service=%s, account=%s' % (service_name, account_name))
+            raise KeyError(
+                f'No keychain entry for generic password: service={service_name}, account={account_name}'
+            )
+
         elif rc != 0:
             raise RuntimeError('Unable to retrieve generic password (service=%s, account=%s): rc=%d' % (service_name, account_name, rc))
 
-        password = password_data.value[0:password_length.value]
+        password = password_data.value[:password_length.value]
 
         Security.lib.SecKeychainItemFreeContent(None, password_data)
 
@@ -141,11 +144,14 @@ class Keychain(object):
         )
 
         if rc == -25300:
-            raise KeyError('No keychain entry for internet password: server=%s, account=%s' % (server_name, account_name))
+            raise KeyError(
+                f'No keychain entry for internet password: server={server_name}, account={account_name}'
+            )
+
         elif rc != 0:
             raise RuntimeError('Unable to retrieve internet password (server=%s, account=%s): rc=%d' % (server_name, account_name, rc))
 
-        password = password_data.value[0:password_length.value]
+        password = password_data.value[:password_length.value]
 
         Security.lib.SecKeychainItemFreeContent(None, password_data)
 
@@ -212,7 +218,7 @@ class GenericPassword(object):
         super(GenericPassword, self).__init__()
         for k, v in kwargs.items():
             if not hasattr(self, k):
-                raise AttributeError("Unknown property %s" % k)
+                raise AttributeError(f"Unknown property {k}")
             setattr(self, k, v)
 
     def update_password(self, new_password):
@@ -226,7 +232,7 @@ class GenericPassword(object):
         )
 
         if rc == -61:
-            raise RuntimeError("Permission denied updating %s" % self)
+            raise RuntimeError(f"Permission denied updating {self}")
         elif rc != 0:
             raise RuntimeError("Unable to update password for %s: rc = %d" % rc)
 
@@ -248,11 +254,12 @@ class GenericPassword(object):
         return repr(self)
 
     def __repr__(self):
-        props = []
-        for k in ['service_name', 'account_name', 'label']:
-            props.append("%s=%s" % (k, repr(getattr(self, k))))
+        props = [
+            f"{k}={repr(getattr(self, k))}"
+            for k in ['service_name', 'account_name', 'label']
+        ]
 
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(props))
+        return f'{self.__class__.__name__}({", ".join(props)})'
 
 
 class InternetPassword(GenericPassword):
@@ -271,12 +278,21 @@ class InternetPassword(GenericPassword):
         super(InternetPassword, self).__init__(**kwargs)
 
     def __repr__(self):
-        props = []
-        for k in ['account_name', 'server_name', 'security_domain', 'path', 'port', 'protocol_type', 'authentication_type']:
-            if getattr(self, k):
-                props.append("%s=%s" % (k, repr(getattr(self, k))))
+        props = [
+            f"{k}={repr(getattr(self, k))}"
+            for k in [
+                'account_name',
+                'server_name',
+                'security_domain',
+                'path',
+                'port',
+                'protocol_type',
+                'authentication_type',
+            ]
+            if getattr(self, k)
+        ]
 
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(props))
+        return f'{self.__class__.__name__}({", ".join(props)})'
 
 class SecKeychainAttribute(ctypes.Structure):
     """Contains keychain attributes

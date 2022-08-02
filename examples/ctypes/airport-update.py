@@ -39,7 +39,7 @@ def find_airport_password(ssid):
     elif rc != 0:
         raise RuntimeError('Failed to find password for Airport network %s: rc=%d' % (ssid, rc))
 
-    password = password_data.value[0:password_length.value]
+    password = password_data.value[:password_length.value]
 
     SECURITY.SecKeychainItemFreeContent(None, password_data)
 

@@ -43,13 +43,12 @@ def ListSuidSgid(path):
   prefix_length = len(path)
   for f in res['stdout']:
     if f:
-      snip = f.find('/')
-      if snip:
+      if snip := f.find('/'):
         snip_index = snip + prefix_length
         rawpath = f[snip_index:]
         catalog.append(rawpath)
       else:
-        logging.warn('snip: %s' % snip)
+        logging.warn(f'snip: {snip}')
         logging.warn(f)
   return catalog
 
@@ -65,13 +64,10 @@ def ReadWhiteList(path):
     dictionary of path:True mappings
   """
   white_file = open(path, 'r')
-  catalog = {}
-  for entry in white_file:
-    if not entry or entry[:1] == '#':
-      pass   # ignore comment and empty lines in whitelist file
-    else:
-      catalog[entry.strip()] = True
-  return catalog
+  return {
+      entry.strip(): True
+      for entry in white_file if entry and entry[:1] != '#'
+  }
 
 
 class TestSUIDGUIDFiles(macdmgtest.DMGUnitTest):

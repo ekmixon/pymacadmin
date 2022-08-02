@@ -50,7 +50,7 @@ def expand_pkg(pkg_file):
 def get_description(pkg):
     """Return the HTML description """
 
-    su_desc = pkg + '/Resources/English.lproj/SUDescription.html'
+    su_desc = f'{pkg}/Resources/English.lproj/SUDescription.html'
 
     if not exists(su_desc):
         return "<i>no description</i>"
@@ -93,7 +93,7 @@ def load_scripts(pkg):
                 if not subscript_files:
                     continue
 
-                script_li.append("%s Scripts" % join(f, 'Scripts', script))
+                script_li.append(f"{join(f, 'Scripts', script)} Scripts")
                 subscripts = Tag(SOUP, 'ul')
 
                 for subscript in subscript_files:
@@ -114,7 +114,7 @@ def load_scripts(pkg):
 
         if script_list.contents:
             new_scripts = Tag(SOUP, 'li')
-            new_scripts.append(NavigableString("%s Scripts" % f))
+            new_scripts.append(NavigableString(f"{f} Scripts"))
             new_scripts.append(script_list)
             script_ul.append(new_scripts)
 
@@ -128,10 +128,10 @@ def get_file_list(pkg, sub_package):
     if not file_ul:
         raise RuntimeError("""Template doesn't appear to have a <ul id="files">!""")
 
-    if not "cleaned" in file_ul.get("class", ""):
+    if "cleaned" not in file_ul.get("class", ""):
         file_ul.contents = [] # Remove any template content
 
-    for k, v in get_bom_contents(pkg + '/' + sub_package + '/Bom').items():
+    for k, v in get_bom_contents(f'{pkg}/{sub_package}/Bom').items():
         file_ul.append(get_list_for_key(k, v))
 
 def get_list_for_key(name, children):
@@ -168,7 +168,7 @@ def get_bom_contents(bom_file):
     )
     file_list.sort(key=str.lower)
 
-    contents = dict()
+    contents = {}
 
     for f in file_list:
         contents = merge_list(contents, f.split('/'))
@@ -180,7 +180,7 @@ def merge_list(master_dict, parts):
     """Given a dict and a list of elements, recursively create sub-dicts to represent each "row" """
     if parts:
         head = parts.pop(0)
-        master_dict[head] = merge_list(master_dict.setdefault(head, dict()), parts)
+        master_dict[head] = merge_list(master_dict.setdefault(head, {}), parts)
 
     return master_dict
 
@@ -196,7 +196,7 @@ def generate_package_report(pkg):
 
     load_scripts(pkg)
 
-    if exists(pkg + "/Bom"):
+    if exists(f"{pkg}/Bom"):
         get_file_list(pkg, "")
 
     for f in os.listdir(pkg):

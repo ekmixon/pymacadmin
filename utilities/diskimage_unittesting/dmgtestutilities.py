@@ -27,11 +27,7 @@ import Foundation
 
 def RemoveEmpties(a_list):
   """Returns a list with no empty lines."""
-  cleaned = []
-  for a in a_list:
-    if a:
-      cleaned.append(a)
-  return cleaned
+  return [a for a in a_list if a]
 
 
 def ProcessCommand(command, strip_empty_lines=True):
@@ -47,8 +43,7 @@ def ProcessCommand(command, strip_empty_lines=True):
   cmd = subprocess.Popen(command, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
   (stdout, stderr) = cmd.communicate()
-  info = {}
-  info['errorcode'] = cmd.returncode
+  info = {'errorcode': cmd.returncode}
   if not strip_empty_lines:
     info['stdout'] = stdout.split('\n')
     info['stderr'] = stderr.split('\n')

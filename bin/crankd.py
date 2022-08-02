@@ -16,6 +16,7 @@ class:        the name of a python class which will be instantiated once
 method:       (class, method) tuple
 """
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -45,13 +46,13 @@ VERSION = "$Revision: #4 $"
 
 # Events which have a "class" handler use an instantiated object; we want to
 # load only one copy
-HANDLER_OBJECTS = dict()
+HANDLER_OBJECTS = {}
 # Callbacks indexed by SystemConfiguration keys
-SC_HANDLERS = dict()
+SC_HANDLERS = {}
 # Callbacks indexed by filesystem path
-FS_WATCHED_FILES = dict()
+FS_WATCHED_FILES = {}
 # handlers for workspace events
-WORKSPACE_HANDLERS = dict()
+WORKSPACE_HANDLERS = {}
 
 CRANKD_OPTIONS = None
 CRANKD_CONFIG = None
@@ -83,17 +84,17 @@ class NotificationHandler(Cocoa.NSObject):
     my_name = stack[0][3]
     caller = stack[1][3]
     raise NotImplementedError(
-        "%s should have been overridden. Called by %s as: %s(%s)" %
-        (my_name, caller, my_name, ", ".join(
-            list(map(repr, args)) +
-            ["%s=%s" % (k, repr(v)) for k, v in kwargs.items()])))
+        ("%s should have been overridden. Called by %s as: %s(%s)" % (
+            my_name,
+            caller,
+            my_name,
+            ", ".join((list(map(repr, args)) +
+                       [f"{k}={repr(v)}" for k, v in kwargs.items()])),
+        )))
 
   def onNotification_(self, the_notification):
     """Pass an NSNotifications to our handler."""
-    if the_notification.userInfo:
-      user_info = the_notification.userInfo()
-    else:
-      user_info = None
+    user_info = the_notification.userInfo() if the_notification.userInfo else None
     self.callable(user_info=user_info)  # pylint: disable=E1101
 
 
@@ -113,14 +114,14 @@ def log_list(msg, items, level=logging.INFO):
   """
   max_len = 1024 - len(msg % "")
   cur_len = 0
-  cur_items = list()
+  cur_items = []
 
   while [i[:max_len] for i in items]:
     i = items.pop()
     if cur_len + len(i) + 2 > max_len:
       logging.info(msg, ", ".join(cur_items))
       cur_len = 0
-      cur_items = list()
+      cur_items = []
 
     cur_items.append(i)
     cur_len += len(i) + 2
@@ -166,8 +167,7 @@ def get_callable_for_event(name, event_config, context=None):
             get_handler_object(event_config["method"][0]),
             event_config["method"][1]), **kwargs)
   else:
-    raise AttributeError(
-        "%s must have a class, method, function or command" % name)
+    raise AttributeError(f"{name} must have a class, method, function or command")
 
   return f
 
@@ -206,8 +206,6 @@ def get_handler_object(class_name):
 
   if class_name not in HANDLER_OBJECTS:
     h_obj = get_callable_from_string(class_name)()
-    if isinstance(h_obj, BaseHandler):
-      pass  # TODO(anyone): Do we even need BaseHandler any more?
     HANDLER_OBJECTS[class_name] = h_obj
 
   return HANDLER_OBJECTS[class_name]
@@ -295,7 +293,7 @@ def process_commandline():
   (options, args) = parser.parse_args()
 
   if args:
-    parser.error("Unknown command-line arguments: %s" % args)
+    parser.error(f"Unknown command-line arguments: {args}")
 
   options.support_path = support_path
   options.config_file = os.path.realpath(options.config_file)
@@ -324,13 +322,13 @@ def load_config(options):
         "%s does not exist - initializing with an example configuration",
         CRANKD_OPTIONS.config_file)
     print(
-        "Creating %s with default options for you to customize" %
-        options.config_file,
-        file=sys.stderr)
+        f"Creating {options.config_file} with default options for you to customize",
+        file=sys.stderr,
+    )
     print(
-        "%s --list-events will list the events you can monitor on this system" %
-        sys.argv[0],
-        file=sys.stderr)
+        f"{sys.argv[0]} --list-events will list the events you can monitor on this system",
+        file=sys.stderr,
+    )
     example_config = {
         "SystemConfiguration": {
             "State:/Network/Global/IPv4": {
@@ -361,7 +359,7 @@ def load_config(options):
       try:
         __import__(module)
       except ImportError as exc:
-        print("Unable to import %s: %s" % (module, exc), file=sys.stderr)
+        print(f"Unable to import {module}: {exc}", file=sys.stderr)
         sys.exit(1)
   return plist
 
@@ -395,7 +393,7 @@ def add_workspace_notifications(nsw_config):
 
     if "class" in event_config:
       obj = get_handler_object(event_config["class"])
-      objc_method = "on%s:" % event
+      objc_method = f"on{event}:"
       py_method = objc_method.replace(":", "_")
       if not hasattr(obj, py_method) or not callable(getattr(obj, py_method)):
         print(
@@ -409,7 +407,7 @@ def add_workspace_notifications(nsw_config):
           obj, objc_method, event, None)
     else:
       handler = NotificationHandler.new()
-      handler.name = "NSWorkspace Notification %s" % event
+      handler.name = f"NSWorkspace Notification {event}"
       handler.callable = get_callable_for_event(
           event, event_config, context=handler.name)
 
@@ -446,11 +444,9 @@ def add_sc_notifications(sc_config):
   try:
     for key in keys:
       SC_HANDLERS[key] = get_callable_for_event(
-          key, sc_config[key], context="SystemConfiguration: %s" % key)
+          key, sc_config[key], context=f"SystemConfiguration: {key}")
   except AttributeError as exc:
-    print(
-        "Error configuring SystemConfiguration events: %s" % exc,
-        file=sys.stderr)
+    print(f"Error configuring SystemConfiguration events: {exc}", file=sys.stderr)
     sys.exit(1)
 
   store = get_sc_store()
@@ -471,7 +467,8 @@ def add_fs_notifications(fs_config):
     add_fs_notification(
         path,
         get_callable_for_event(
-            path, fs_config[path], context="FSEvent: %s" % path))
+            path, fs_config[path], context=f"FSEvent: {path}"),
+    )
 
 
 def add_fs_notification(f_path, callback):
@@ -479,7 +476,7 @@ def add_fs_notification(f_path, callback):
   path = os.path.realpath(os.path.expanduser(f_path))
   if not os.path.exists(path):
     raise AttributeError(
-        "Cannot add an FSEvent notification: %s does not exist!" % path)
+        f"Cannot add an FSEvent notification: {path} does not exist!")
 
   if not os.path.isdir(path):
     path = os.path.dirname(path)
@@ -493,13 +490,13 @@ def add_fs_notification(f_path, callback):
 def start_fs_events():
   """Start FSEevents stream."""
   stream_ref = FSEvents.FSEventStreamCreate(
-      None,  # Use the default Cocoa.CFAllocator
+      None,
       fsevent_callback,
-      None,  # We don't need a FSEventStreamContext
-      list([str(f) for f in FS_WATCHED_FILES.keys()]),
-      FSEvents.kFSEventStreamEventIdSinceNow,  # Only events in the future
-      1.0,  # Process events within 1 second
-      0  # We don't need any special flags for our stream
+      None,
+      [str(f) for f in FS_WATCHED_FILES.keys()],
+      FSEvents.kFSEventStreamEventIdSinceNow,
+      1.0,
+      0,
   )
 
   if not stream_ref:
@@ -587,7 +584,7 @@ def do_shell(command, context=None, **kwargs):
   # ordeals like associative arrays in Bash
   for k in ["info", "key"]:
     if k in kwargs and kwargs[k]:
-      child_env["CRANKD_%s" % k.upper()] = str(kwargs[k])
+      child_env[f"CRANKD_{k.upper()}"] = str(kwargs[k])
 
   if "user_info" in kwargs:
     for k, v in kwargs["user_info"].items():
@@ -617,7 +614,7 @@ def add_conditional_restart(file_name, reason):
       if os.stat(file_name).st_mtime != orig_stat:
         restart(reason)
     except (OSError, IOError, RuntimeError) as exc:
-      restart("Exception while checking %s: %s" % (file_name, exc))
+      restart(f"Exception while checking {file_name}: {exc}")
 
   add_fs_notification(file_name, cond_restart)
 
@@ -648,7 +645,8 @@ def main():
   # restart if any of our libraries have been updated:
   add_conditional_restart(
       CRANKD_OPTIONS.config_file,
-      "Configuration file %s changed" % CRANKD_OPTIONS.config_file)
+      f"Configuration file {CRANKD_OPTIONS.config_file} changed",
+  )
   for m in [
       i for i
       in list(sys.modules.values())
@@ -657,9 +655,9 @@ def main():
       and i.__file__ is not None
   ]:
     if m.__name__ == "__main__":
-      msg = "%s was updated" % m.__file__
+      msg = f"{m.__file__} was updated"
     else:
-      msg = "Module %s was updated" % m.__name__
+      msg = f"Module {m.__name__} was updated"
 
     add_conditional_restart(m.__file__, msg)
 

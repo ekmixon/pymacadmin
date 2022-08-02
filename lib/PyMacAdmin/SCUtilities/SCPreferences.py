@@ -35,10 +35,10 @@ class SCPreferences(object):
         new_settings = SCPreferencesPathGetValue(self.session, u'/NetworkServices/')
 
         for interface in new_settings:
-            new_settings[interface]['Proxies']["%sEnable" % protocol] = 1 if enable else 0
+            new_settings[interface]['Proxies'][f"{protocol}Enable"] = 1 if enable else 0
             if enable:
-                new_settings[interface]['Proxies']['%sPort' % protocol]  = int(port)
-                new_settings[interface]['Proxies']['%sProxy' % protocol] = server
+                new_settings[interface]['Proxies'][f'{protocol}Port'] = int(port)
+                new_settings[interface]['Proxies'][f'{protocol}Proxy'] = server
 
         SCPreferencesPathSetValue(self.session, u'/NetworkServices/', new_settings)
 

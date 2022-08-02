@@ -45,7 +45,7 @@ class TestLintPlistsOnDMG(macdmgtest.DMGUnitTest):
                                                plistfile])
         if cmd['errorcode']:
           self.bad_plists.append(plistfile)
-          self.lint_output.append('Error found in %s' % plistfile)
+          self.lint_output.append(f'Error found in {plistfile}')
           for x in cmd['stdout']:
             self.lint_output.append(x)
 

@@ -33,24 +33,21 @@ class TestAppDirectories(macdmgtest.DMGUnitTest):
     """Set up exceptions to standard permissions requirements."""
     self.errors_found = []
     self.standard_stat = {'uid': 0, 'gid': 80, 'mode': '0775'}
-    self.application_exceptions = {}
-    self.application_exceptions['System Preferences'] = {}
+    self.application_exceptions = {'System Preferences': {}}
     self.application_exceptions['System Preferences']['gid'] = 0
     self.application_exceptions['System Preferences']['mode'] = '0775'
     self.application_exceptions['System Preferences']['uid'] = 0
-    self.utilities_exceptions = {}
-    # Here are a couple of examples of making exceptions for stuff we
-    # symlink into Applications or Applications/Utilities
-    self.utilities_exceptions['Kerberos'] = {}
+    self.utilities_exceptions = {'Kerberos': {}}
     self.utilities_exceptions['Kerberos']['gid'] = 0
     self.utilities_exceptions['Kerberos']['mode'] = '0755'
     self.utilities_exceptions['Kerberos']['symlink_ok'] = True
     self.utilities_exceptions['Kerberos']['uid'] = 0
-    self.utilities_exceptions['Screen Sharing'] = {}
-    self.utilities_exceptions['Screen Sharing']['gid'] = 0
-    self.utilities_exceptions['Screen Sharing']['mode'] = '0755'
-    self.utilities_exceptions['Screen Sharing']['symlink_ok'] = True
-    self.utilities_exceptions['Screen Sharing']['uid'] = 0
+    self.utilities_exceptions['Screen Sharing'] = {
+        'gid': 0,
+        'mode': '0755',
+        'symlink_ok': True,
+        'uid': 0,
+    }
 
   def _SanityCheckApp(self, statmatrix, overrides, thedir, name):
     """Check a .app directory and ensure it has sane perms and ownership."""

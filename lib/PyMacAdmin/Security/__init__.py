@@ -52,8 +52,7 @@ CARBON_DEFINES = {
     'kSecCertificateItemClass':         CSSM_DL_DB_RECORD_X509_CERTIFICATE
 }
 
-for k in CARBON_DEFINES:
-    v = CARBON_DEFINES[k]
+for k, v in CARBON_DEFINES.items():
     if isinstance(v, str):
         assert(len(v) == 4)
         v = ctypes.c_ulong(struct.unpack(">L", v)[0])

@@ -34,17 +34,11 @@ class TestEmptyDirectories(macdmgtest.DMGUnitTest):
   def DirectoryEmpty(self, dirname):
     """Make sure dirname is empty."""
     path = self.PathOnDMG(dirname)
-    if os.listdir(path):
-      return False
-    else:
-      return True
+    return not os.listdir(path)
 
   def testEmptyDirectories(self):
     """Ensure every directory that is supposed to be empty on the image, is."""
-    full_dirs = []
-    for d in self.empty_directories:
-      if not self.DirectoryEmpty(d):
-        full_dirs.append(d)
+    full_dirs = [d for d in self.empty_directories if not self.DirectoryEmpty(d)]
     self.assertEqual(len(full_dirs), 0)
 
 if __name__ == '__main__':

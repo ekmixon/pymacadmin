@@ -25,11 +25,7 @@ def checked_carbon_call(rc, func, args):
     """
 
     if rc < 0:
-        if rc == -25300: #errKCItemNotFound
-            exc_class = KeyError
-        else:
-            exc_class = RuntimeError
-
+        exc_class = KeyError if rc == -25300 else RuntimeError
         raise exc_class("%s(%s) returned %d: %s" % (func.__name__, map(repr, args), rc, mac_strerror(rc)))
     return rc
 

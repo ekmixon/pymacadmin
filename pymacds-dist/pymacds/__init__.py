@@ -60,14 +60,13 @@ def RunProcess(cmd, stdinput=None, env=None, cwd=None, sudo=False,
     sudo_cmd = ['sudo']
     if sudo_password and not stdinput:
       # Set sudo to get password from stdin
-      sudo_cmd = sudo_cmd + ['-S']
+      sudo_cmd += ['-S']
       stdinput = sudo_password + '\n'
-    elif sudo_password and stdinput:
+    elif sudo_password:
       raise DSException('stdinput and sudo_password '
                         'are mutually exclusive')
     else:
-      sudo_cmd = sudo_cmd + ['-p',
-                             "%u's password is required for admin access: "]
+      sudo_cmd += ['-p', "%u's password is required for admin access: "]
     cmd = sudo_cmd + cmd
   environment = os.environ
   environment.update(env)
@@ -98,10 +97,9 @@ def _GetCSPSearchPathForPath(path):
   (stdout, stderr, unused_returncode) = RunProcess(command)
   result = plistlib.readPlistFromString(stdout)
   if 'dsAttrTypeStandard:CSPSearchPath' in result:
-    search_nodes = result['dsAttrTypeStandard:CSPSearchPath']
-    return search_nodes
+    return result['dsAttrTypeStandard:CSPSearchPath']
   else:
-    raise DSException('Unable to retrieve search nodes: %s' % stderr)
+    raise DSException(f'Unable to retrieve search nodes: {stderr}')
 
 
 def _ModifyCSPSearchPathForPath(action, node, path):
@@ -117,7 +115,7 @@ def _ModifyCSPSearchPathForPath(action, node, path):
     DSException: Could not modify nodes for path.
   """
 
-  command = [_DSCL, path, '-%s' % action, '/', 'CSPSearchPath', node]
+  command = [_DSCL, path, f'-{action}', '/', 'CSPSearchPath', node]
   (unused_stdout, stderr, returncode) = RunProcess(command)
   if returncode:
     raise DSException('Unable to perform %s on CSPSearchPath '
@@ -194,30 +192,27 @@ def DSQuery(dstype, objectname, attribute=None):
   Raises:
     DSException: Cannot query DirectoryServices.
   """
-  ds_path = '/%ss/%s' % (dstype.capitalize(), objectname)
+  ds_path = f'/{dstype.capitalize()}s/{objectname}'
   cmd = [_DSCL, '-plist', '.', '-read', ds_path]
   if attribute:
     cmd.append(attribute)
   (stdout, stderr, returncode) = RunProcess(cmd)
   if returncode:
-    raise DSException('Cannot query %s for %s: %s' % (ds_path,
-                                                      attribute,
-                                                      stderr))
+    raise DSException(f'Cannot query {ds_path} for {attribute}: {stderr}')
   plist = NSString.stringWithString_(stdout).propertyList()
-  if attribute:
-    value = None
-    if 'dsAttrTypeStandard:%s' % attribute in plist:
-      value = plist['dsAttrTypeStandard:%s' % attribute]
-    elif attribute in plist:
-      value = plist[attribute]
-    try:
-      # We're copying to a new list to convert from NSCFArray
-      return value[:]
-    except TypeError:
-      # ... unless we can't
-      return value
-  else:
+  if not attribute:
     return plist
+  value = None
+  if f'dsAttrTypeStandard:{attribute}' in plist:
+    value = plist[f'dsAttrTypeStandard:{attribute}']
+  elif attribute in plist:
+    value = plist[attribute]
+  try:
+    # We're copying to a new list to convert from NSCFArray
+    return value[:]
+  except TypeError:
+    # ... unless we can't
+    return value
 
 
 def DSSet(dstype, objectname, attribute=None, value=None):
@@ -233,20 +228,18 @@ def DSSet(dstype, objectname, attribute=None, value=None):
   Raises:
     DSException: Cannot modify DirectoryServices.
   """
-  ds_path = '/%ss/%s' % (dstype.capitalize(), objectname)
+  ds_path = f'/{dstype.capitalize()}s/{objectname}'
   cmd = [_DSCL, '.', '-create', ds_path]
   if attribute:
     cmd.append(attribute)
     if value:
-      if type(value) == type(list()):
+      if type(value) == type([]):
         cmd.extend(value)
       else:
         cmd.append(value)
   (unused_stdout, stderr, returncode) = RunProcess(cmd)
   if returncode:
-    raise DSException('Cannot set %s for %s: %s' % (attribute,
-                                                    ds_path,
-                                                    stderr))
+    raise DSException(f'Cannot set {attribute} for {ds_path}: {stderr}')
 
 
 def DSDelete(dstype, objectname, attribute=None, value=None):
@@ -260,7 +253,7 @@ def DSDelete(dstype, objectname, attribute=None, value=None):
   Raises:
     DSException: Cannot modify DirectoryServices.
   """
-  ds_path = '/%ss/%s' % (dstype.capitalize(), objectname)
+  ds_path = f'/{dstype.capitalize()}s/{objectname}'
   cmd = [_DSCL, '.', '-delete', ds_path]
   if attribute:
     cmd.append(attribute)
@@ -268,9 +261,7 @@ def DSDelete(dstype, objectname, attribute=None, value=None):
       cmd.extend([value])
   (unused_stdout, stderr, returncode) = RunProcess(cmd)
   if returncode:
-    raise DSException('Cannot delete %s for %s: %s' % (attribute,
-                                                       ds_path,
-                                                       stderr))
+    raise DSException(f'Cannot delete {attribute} for {ds_path}: {stderr}')
 
 
 def UserAttribute(username, attribute):
@@ -331,5 +322,5 @@ def RemoveUserFromLocalGroup(username, group):
          '-d', username, '-t', 'user', group]
   (unused_stdout, stderr, rc) = RunProcess(cmd)
   if rc is not 0:
-    raise DSException('Error removing %s from group %s, returned %s' %
-                      (username, group, stderr))
+    raise DSException(
+        f'Error removing {username} from group {group}, returned {stderr}')

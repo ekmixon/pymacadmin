@@ -30,7 +30,11 @@ class KeychainTests(unittest.TestCase):
     def test_find_nonexistent_generic_password(self):
         import uuid
         system_keychain = Keychain("/Library/Keychains/System.keychain")
-        self.assertRaises(KeyError, system_keychain.find_generic_password, **{ 'account_name': "NonExistantGenericPassword-%s" % uuid.uuid4() })
+        self.assertRaises(
+            KeyError,
+            system_keychain.find_generic_password,
+            **{'account_name': f"NonExistantGenericPassword-{uuid.uuid4()}"},
+        )
 
     def test_add_and_remove_generic_password(self):
         import uuid
@@ -44,7 +48,7 @@ class KeychainTests(unittest.TestCase):
         k.add(i)
 
         self.assertEquals(i.password, k.find_generic_password(service_name, account_name).password)
- 
+
         k.remove(i)
         self.assertRaises(KeyError, k.find_generic_password, **{"service_name": service_name, "account_name": account_name})
 

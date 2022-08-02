@@ -77,8 +77,8 @@ def DetachDiskImage(path):
   if returncode:
     command = ["/usr/bin/hdiutil", "detach", "-force", path]
     returncode = subprocess.call(command)
-    if returncode:
-      raise StandardError("Unable to unmount dmg mounted at: %s" % path)
+  if returncode:
+    raise StandardError(f"Unable to unmount dmg mounted at: {path}")
   return True
 
 
@@ -88,9 +88,8 @@ def TestClasses(module):
   pattern = re.compile("^Test\w+$")  # only classes starting with "Test"
   for name in dir(module):
     obj = getattr(module, name)
-    if type(obj) in (types.ClassType, types.TypeType):
-      if pattern.match(name):
-        classes.append(name)
+    if type(obj) in (types.ClassType, types.TypeType) and pattern.match(name):
+      classes.append(name)
   return classes
 
 
@@ -99,7 +98,7 @@ def GetTestSuite(path, mountpoint, options):
   dirname = os.path.dirname(path)
   filename = os.path.basename(path)
 
-  if not dirname in sys.path:
+  if dirname not in sys.path:
     sys.path.append(dirname)
 
   modulename = re.sub("\.py$", "", filename)
@@ -118,10 +117,7 @@ def ListTests(path):
   """lists tests in directory "path" ending in _test.py."""
 
   pattern = re.compile("^\w*_test.py$", re.IGNORECASE)
-  tests = []
-  for test in os.listdir(path):
-    if pattern.match(test):
-      tests.append(test)
+  tests = [test for test in os.listdir(path) if pattern.match(test)]
   tests.sort()
   return tests
 

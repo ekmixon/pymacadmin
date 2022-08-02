@@ -58,16 +58,14 @@ class TestMachineInfo(unittest.TestCase):
     imageinfo_file = os.path.join(self.tempdir, "imageinfo.plist")
     shutil.copyfile(self.orig_imageinfo_file, imageinfo_file)
     command = ["plutil", "-convert", "xml1", imageinfo_file]
-    returncode = subprocess.call(command)
-    if returncode:
+    if returncode := subprocess.call(command):
       raise StandardError("unable to convert plist to xml1")
     self.imageinfo = plistlib.readPlist(imageinfo_file)
 
   def tearDown(self):
     """clean up the temporary location."""
-    if self.tempdir:
-      if os.path.isdir(self.tempdir):
-        shutil.rmtree(self.tempdir)
+    if self.tempdir and os.path.isdir(self.tempdir):
+      shutil.rmtree(self.tempdir)
 
   def testFile(self):
     """test the original file is a proper file."""

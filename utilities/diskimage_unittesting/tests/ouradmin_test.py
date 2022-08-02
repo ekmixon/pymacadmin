@@ -34,14 +34,12 @@ class TestCheckForouradmin(macdmgtest.DMGUnitTest):
   def setUp(self):
     """Setup paths."""
     self.localnode = 'var/db/dslocal/nodes/Default'
-    self.admin_plist = self.PathOnDMG('%s/groups/admin.plist' % self.localnode)
-    self.ouradmin_plist = self.PathOnDMG('%s/users/ouradmin.plist' %
-                                         self.localnode)
+    self.admin_plist = self.PathOnDMG(f'{self.localnode}/groups/admin.plist')
+    self.ouradmin_plist = self.PathOnDMG(f'{self.localnode}/users/ouradmin.plist')
     self.ouradmin_stat = os.stat(self.ouradmin_plist)
-    self.lpadmin_plist = self.PathOnDMG('%s/groups/_lpadmin.plist' %
-                                        self.localnode)
-    self.appserveradm_plist = self.PathOnDMG('%s/groups/_appserveradm.plist' %
-                                             self.localnode)
+    self.lpadmin_plist = self.PathOnDMG(f'{self.localnode}/groups/_lpadmin.plist')
+    self.appserveradm_plist = self.PathOnDMG(
+        f'{self.localnode}/groups/_appserveradm.plist')
 
   def testOuradminIsMemberOfLPadminGroup(self):
     """Check that ouradmin user is in _lpadmin group."""
@@ -60,7 +58,7 @@ class TestCheckForouradmin(macdmgtest.DMGUnitTest):
 
   def testOuradminIsInDSLocal(self):
     """Check for ouradmin user in local ds node."""
-    plistpath = self.PathOnDMG('%s/users/ouradmin.plist' % self.localnode)
+    plistpath = self.PathOnDMG(f'{self.localnode}/users/ouradmin.plist')
     self.assertEqual(os.path.exists(plistpath), True)
 
   def testOuradminPlistMode(self):

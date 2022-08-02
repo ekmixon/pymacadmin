@@ -32,8 +32,5 @@ class NSNotificationHandler(NSObject):
 
     def onNotification_(self, the_notification):
         """Pass an NSNotifications to our handler"""
-        if the_notification.userInfo:
-            user_info = the_notification.userInfo()
-        else:
-            user_info = None
+        user_info = the_notification.userInfo() if the_notification.userInfo else None
         self.callable(user_info=user_info) # pylint: disable-msg=E1101

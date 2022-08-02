@@ -33,13 +33,9 @@ def ReadBlackList(path):
     dictionary of path:True mappings
   """
   blacklist_file = open(path, 'r')
-  catalog = []
-  for entry in blacklist_file:
-    if not entry or entry[:1] == '#':
-      pass   # ignore comment and empty lines in blacklist file
-    else:
-      catalog.append(entry.strip())
-  return catalog
+  return [
+      entry.strip() for entry in blacklist_file if entry and entry[:1] != '#'
+  ]
 
 
 class TestBlacklists(macdmgtest.DMGUnitTest):
@@ -57,11 +53,7 @@ class TestBlacklists(macdmgtest.DMGUnitTest):
     Returns:
       list of directories/files that are present that shouldn't be.
     """
-    bad = []
-    for d in the_list:
-      if self.CheckForExistence(d) == True:
-        bad.append(d)
-    return bad
+    return [d for d in the_list if self.CheckForExistence(d) == True]
 
   def testBlacklistedDirectories(self):
     """Ensure directories from blacklist are absent from the image."""

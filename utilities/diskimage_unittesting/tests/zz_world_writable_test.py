@@ -51,13 +51,12 @@ def CatalogWritables(path):
   prefix_length = len(path)
   for s in state_of_sin:
     if s:
-      snip = s.find('/')
-      if snip:
+      if snip := s.find('/'):
         snip_index = snip + prefix_length
         rawpath = s[snip_index:]
         writeables.append(rawpath)
       else:
-        logging.warn('snip: %s' % snip)
+        logging.warn(f'snip: {snip}')
         logging.warn(s)
   return writeables
 
@@ -73,13 +72,10 @@ def ReadWhiteList(path):
     dictionary of path:True mappings
   """
   white_file = open(path, 'r')
-  catalog = {}
-  for entry in white_file:
-    if not entry or entry[:1] == '#':
-      pass   # ignore comment and empty lines
-    else:
-      catalog[entry.strip()] = True
-  return catalog
+  return {
+      entry.strip(): True
+      for entry in white_file if entry and entry[:1] != '#'
+  }
 
 
 class TestWritableDirectoriesAndFiles(macdmgtest.DMGUnitTest):

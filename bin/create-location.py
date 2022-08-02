@@ -18,9 +18,11 @@ def copy_set(path, old_id, old_set):
     new_set      = CFPropertyListCreateDeepCopy(None, old_set, kCFPropertyListMutableContainersAndLeaves)
     new_set_path = SCPreferencesPathCreateUniqueChild(sc_prefs, path)
 
-    if not new_set_path \
-      or not re.match(r"^%s/[^/]+$" % path, new_set_path):
-        raise RuntimeError("SCPreferencesPathCreateUniqueChild() returned an invalid path for the new location: %s" % new_set_path)
+    if not new_set_path or not re.match(f"^{path}/[^/]+$", new_set_path):
+        raise RuntimeError(
+            f"SCPreferencesPathCreateUniqueChild() returned an invalid path for the new location: {new_set_path}"
+        )
+
 
     return new_set_path, new_set
 
@@ -54,7 +56,7 @@ def main():
 
     for k in sets:
         if sets[k][kSCPropUserDefinedName] == new_name:
-            raise RuntimeError("A set named %s already exists" % new_name)
+            raise RuntimeError(f"A set named {new_name} already exists")
         elif sets[k][kSCPropUserDefinedName] == "Automatic":
             old_set_id = k
 
@@ -65,18 +67,22 @@ def main():
     logging.debug("Old set %s:\n%s" % (old_set_id, old_set))
 
     logging.info('Creating "%s" using a copy of "%s"' % (new_name, old_set[kSCPropUserDefinedName]))
-    new_set_path, new_set           = copy_set("/%s" % kSCPrefSets, old_set_id, old_set)
+    new_set_path, new_set = copy_set(f"/{kSCPrefSets}", old_set_id, old_set)
     new_set_id                      = new_set_path.split('/')[-1]
     new_set[kSCPropUserDefinedName] = new_name
 
-    service_map = dict()
+    service_map = {}
 
     for old_service_id in old_set[kSCCompNetwork][kSCCompService]:
-        assert(
-            old_set[kSCCompNetwork][kSCCompService][old_service_id][kSCResvLink].startswith("/%s" % kSCPrefNetworkServices)
+        assert old_set[kSCCompNetwork][kSCCompService][old_service_id][
+            kSCResvLink
+        ].startswith(f"/{kSCPrefNetworkServices}")
+
+
+        new_service_path = SCPreferencesPathCreateUniqueChild(
+            sc_prefs, f"/{kSCPrefNetworkServices}"
         )
 
-        new_service_path = SCPreferencesPathCreateUniqueChild(sc_prefs, "/%s" % kSCPrefNetworkServices)
         new_service_id   = new_service_path.split("/")[2]
         new_service_cf   = CFPropertyListCreateDeepCopy(
             None,

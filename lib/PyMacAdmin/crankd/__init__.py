@@ -11,12 +11,7 @@ def not_implemented(*args, **kwargs):
     my_name = stack[0][3]
     caller  = stack[1][3]
     raise NotImplementedError(
-        "%s should have been overridden. Called by %s as: %s(%s)" % (
-            my_name,
-            caller,
-            my_name,
-            ", ".join(map(repr, args) + [ "%s=%s" % (k, repr(v)) for k,v in kwargs.items() ])
-        )
+        f'{my_name} should have been overridden. Called by {caller} as: {my_name}({", ".join(map(repr, args) + [f"{k}={repr(v)}" for k,v in kwargs.items()])})'
     )
 
 from . import handlers
